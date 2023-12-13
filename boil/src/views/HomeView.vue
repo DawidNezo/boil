@@ -1,9 +1,187 @@
-<script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+<!--
+A fully spec-compliant TodoMVC implementation
+https://todomvc.com/
+-->
+
+<script setup>
+import { ref, computed, watchEffect } from 'vue'
+
+const STORAGE_KEY = 'vue-todomvc'
+
+const filters = {
+  all: (todos) => todos,
+  active: (todos) => todos.filter((todo) => !todo.completed),
+  completed: (todos) => todos.filter((todo) => todo.completed)
+}
+
+// state
+const todos = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
+const visibility = ref('all')
+const editedTodo = ref()
+const activityName = ref()
+const activityTime = ref()
+const activityBefore = ref()
+
+// derived state
+const filteredTodos = computed(() => filters[visibility.value](todos.value))
+const remaining = computed(() => filters.active(todos.value).length)
+
+// handle routing
+window.addEventListener('hashchange', onHashChange)
+onHashChange()
+
+// persist state
+watchEffect(() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos.value))
+})
+
+function toggleAll(e) {
+  todos.value.forEach((todo) => (todo.completed = e.target.checked))
+}
+
+function addTodo(e) {
+  const value = activityName.value//e.target.value.trim()
+  const value2 = activityTime.value
+  const value3 = activityBefore.value
+  if (value) {
+     todos.value.push({
+       id: Date.now(),
+       title: value,
+       completed: false,
+       time: value2,
+       before: value3
+     })
+     activityName.value = ''
+   }
+}
+
+function removeTodo(todo) {
+  todos.value.splice(todos.value.indexOf(todo), 1)
+}
+
+let beforeEditCache = ''
+function editTodo(todo) {
+  beforeEditCache = todo.title
+  editedTodo.value = todo
+}
+
+function cancelEdit(todo) {
+  editedTodo.value = null
+  todo.title = beforeEditCache
+}
+
+function doneEdit(todo) {
+  if (editedTodo.value) {
+    editedTodo.value = null
+    todo.title = todo.title.trim()
+    if (!todo.title) removeTodo(todo)
+  }
+}
+
+function removeCompleted() {
+  todos.value = filters.active(todos.value)
+}
+
+function onHashChange() {
+  const route = window.location.hash.replace(/#\/?/, '')
+  if (filters[route]) {
+    visibility.value = route
+  } else {
+    window.location.hash = ''
+    visibility.value = 'all'
+  }
+}
 </script>
 
 <template>
-  <main>
-    <!-- <TheWelcome />s -->
-  </main>
+  <section class="todoapp">
+    <header class="header">
+      <h1>CPM</h1>
+      <form>
+        <input
+          class="new-todo"
+          v-model="activityName"
+          autofocus
+          placeholder="Your activity"
+          @keyup.enter="addTodo"
+        >
+        <input
+          class="new-todo"
+          v-model="activityTime"
+          placeholder="Your time"
+          @keyup.enter="addTodo"
+        >
+        <input
+          class="new-todo"
+          v-model="activityBefore"
+          placeholder="Your before"
+          @keyup.enter="addTodo"
+        >
+        <button 
+          @click="addTodo"
+        >
+        Add Activity</button>
+      </form>
+    </header>
+    <section class="main" v-show="todos.length">
+      <input
+        id="toggle-all"
+        class="toggle-all"
+        type="checkbox"
+        :checked="remaining === 0"
+        @change="toggleAll"
+      >
+      <label for="toggle-all">Mark all as complete</label>
+      <ul class="todo-list">
+        <li
+          v-for="todo in filteredTodos"
+          class="todo"
+          :key="todo.id"
+          :class="{ completed: todo.completed, editing: todo === editedTodo }"
+        >
+          <div class="view">
+            <input class="toggle" type="checkbox" v-model="todo.completed">
+            <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
+            <label @dblclick="editTodo(todo)">{{ todo.time }}</label>
+            <label @dblclick="editTodo(todo)">{{ todo.before }}</label>
+            <button class="destroy" @click="removeTodo(todo)"></button>
+          </div>
+          <input
+            v-if="todo === editedTodo"
+            class="edit"
+            type="text"
+            v-model="todo.title"
+            @vue:mounted="({ el }) => el.focus()"
+            @blur="doneEdit(todo)"
+            @keyup.enter="doneEdit(todo)"
+            @keyup.escape="cancelEdit(todo)"
+          >
+        </li>
+      </ul>
+    </section>
+    <footer class="footer" v-show="todos.length">
+      <span class="todo-count">
+        <strong>{{ remaining }}</strong>
+        <span>{{ remaining === 1 ? ' item' : ' items' }} left</span>
+      </span>
+      <ul class="filters">
+        <li>
+          <a href="#/all" :class="{ selected: visibility === 'all' }">All</a>
+        </li>
+        <li>
+          <a href="#/active" :class="{ selected: visibility === 'active' }">Active</a>
+        </li>
+        <li>
+          <a href="#/completed" :class="{ selected: visibility === 'completed' }">Completed</a>
+        </li>
+      </ul>
+      <button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
+        Clear completed
+      </button>
+    </footer>
+  </section>
 </template>
+
+<style>
+@import "https://unpkg.com/todomvc-app-css@2.4.1/index.css";
+</style>
