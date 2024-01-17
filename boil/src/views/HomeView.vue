@@ -1,187 +1,166 @@
-<!--
-A fully spec-compliant TodoMVC implementation
-https://todomvc.com/
--->
+<template>
+  <form>
+  <h1>CPM</h1>
+    <label>Czynność:</label>
+    <input type="text" v-model="newTask"  required @keydown.enter.prevent/>    
+    <label>Czas trwania:</label>
+    <input type="text" v-model="newduration" required @keydown.enter.prevent/> 
+    <label>Czynność poprzedzająca (oddzielaj przecinkiem):</label>
+    <input type="text" v-model="tempDependecie" @keyup="addDependecie" @keydown.enter.prevent/>
+    <div v-for="newdependencie in newdependencies" :key="newdependencie" class="pill">
+    {{ newdependencie }}
+    </div>
+      <div class="buttonContainer">
+    <button type="submit" v-on:click.prevent="submitForm()" @keydown.enter.prevent>
+      Submit task
+    </button>   
+  </div> 
+    <div v-for="(task, index,) in tasks" :key="task.id" class="items">
+      <div>Czynność: {{ task.taskName }}<br> Czas trwania: {{ task.duration }}<br>
+      Czynności poprzedzające: {{ task.dependencie }}</div>
+      <div class="remove-item" @click="removeTask(index)">
+        &times;
+      </div>
+    </div>
+  </form>  
+  </template>
+<script>
+  export default {
+    data() {
+      return {
+        idFortask: 0,
+        newTask:'',
+        tempDependecie: '',
+        tasks: [],
+        newduration: '',
+        newdependencies: []        
+      }
+    },
+    mounted() {    
+    const storedTasks = localStorage.getItem('tasks');
+    if (storedTasks) {
+      this.tasks = JSON.parse(storedTasks);
+    }
+  },
+    methods: {
+      addDependecie(e){
+        if(e.key === ',' && this.tempDependecie){
+          e.preventDefault();
+          const cleanedDependecie = this.tempDependecie.replace(/^,+|,+$/g, '').toUpperCase();
+          if (!this.newdependencies.includes(cleanedDependecie)){
+            this.newdependencies.push(cleanedDependecie)
+          }          
+          this.tempDependecie = ''
+        }
+      },
+      submitForm() {
+      // Perform form validation if needed
+      if (this.newTask.trim() === '' || this.newduration.trim() === '') {
+        // Handle validation error (show a message, prevent submission, etc.)
+        console.log('Validation error: Please fill in all required fields.');
+        return;
+      }
+      
+      this.addtasks();
+    },
+      addtasks() {   
+        this.tasks.push({
+          id: this.idFortask,
+          taskName: this.newTask,
+          duration: parseInt(this.newduration),
+          dependencie: this.newdependencies
+        }) 
 
-<script setup>
-import { ref, computed, watchEffect } from 'vue'
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
 
-const STORAGE_KEY = 'vue-todomvc'
+        this.newTask = '';
+        this.idFortask++;
+        this.newduration = '' ;
+        this.newdependencies = [];
+      },
+      removeTask(index){
+        this.tasks.splice(index, 1);
 
-const filters = {
-  all: (todos) => todos,
-  active: (todos) => todos.filter((todo) => !todo.completed),
-  completed: (todos) => todos.filter((todo) => todo.completed)
-}
-
-// state
-const todos = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
-const visibility = ref('all')
-const editedTodo = ref()
-const activityName = ref()
-const activityTime = ref()
-const activityBefore = ref()
-
-// derived state
-const filteredTodos = computed(() => filters[visibility.value](todos.value))
-const remaining = computed(() => filters.active(todos.value).length)
-
-// handle routing
-window.addEventListener('hashchange', onHashChange)
-onHashChange()
-
-// persist state
-watchEffect(() => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos.value))
-})
-
-function toggleAll(e) {
-  todos.value.forEach((todo) => (todo.completed = e.target.checked))
-}
-
-function addTodo(e) {
-  const value = activityName.value//e.target.value.trim()
-  const value2 = activityTime.value
-  const value3 = activityBefore.value
-  if (value) {
-     todos.value.push({
-       id: Date.now(),
-       title: value,
-       completed: false,
-       time: value2,
-       before: value3
-     })
-     activityName.value = ''
-   }
-}
-
-function removeTodo(todo) {
-  todos.value.splice(todos.value.indexOf(todo), 1)
-}
-
-let beforeEditCache = ''
-function editTodo(todo) {
-  beforeEditCache = todo.title
-  editedTodo.value = todo
-}
-
-function cancelEdit(todo) {
-  editedTodo.value = null
-  todo.title = beforeEditCache
-}
-
-function doneEdit(todo) {
-  if (editedTodo.value) {
-    editedTodo.value = null
-    todo.title = todo.title.trim()
-    if (!todo.title) removeTodo(todo)
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+      }
+    }    
   }
-}
-
-function removeCompleted() {
-  todos.value = filters.active(todos.value)
-}
-
-function onHashChange() {
-  const route = window.location.hash.replace(/#\/?/, '')
-  if (filters[route]) {
-    visibility.value = route
-  } else {
-    window.location.hash = ''
-    visibility.value = 'all'
-  }
-}
 </script>
 
-<template>
-  <section class="todoapp">
-    <header class="header">
-      <h1>CPM</h1>
-      <form>
-        <input
-          class="new-todo"
-          v-model="activityName"
-          autofocus
-          placeholder="Your activity"
-          @keyup.enter="addTodo"
-        >
-        <input
-          class="new-todo"
-          v-model="activityTime"
-          placeholder="Your time"
-          @keyup.enter="addTodo"
-        >
-        <input
-          class="new-todo"
-          v-model="activityBefore"
-          placeholder="Your before"
-          @keyup.enter="addTodo"
-        >
-        <button 
-          @click="addTodo"
-        >
-        Add Activity</button>
-      </form>
-    </header>
-    <section class="main" v-show="todos.length">
-      <input
-        id="toggle-all"
-        class="toggle-all"
-        type="checkbox"
-        :checked="remaining === 0"
-        @change="toggleAll"
-      >
-      <label for="toggle-all">Mark all as complete</label>
-      <ul class="todo-list">
-        <li
-          v-for="todo in filteredTodos"
-          class="todo"
-          :key="todo.id"
-          :class="{ completed: todo.completed, editing: todo === editedTodo }"
-        >
-          <div class="view">
-            <input class="toggle" type="checkbox" v-model="todo.completed">
-            <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
-            <label @dblclick="editTodo(todo)">{{ todo.time }}</label>
-            <label @dblclick="editTodo(todo)">{{ todo.before }}</label>
-            <button class="destroy" @click="removeTodo(todo)"></button>
-          </div>
-          <input
-            v-if="todo === editedTodo"
-            class="edit"
-            type="text"
-            v-model="todo.title"
-            @vue:mounted="({ el }) => el.focus()"
-            @blur="doneEdit(todo)"
-            @keyup.enter="doneEdit(todo)"
-            @keyup.escape="cancelEdit(todo)"
-          >
-        </li>
-      </ul>
-    </section>
-    <footer class="footer" v-show="todos.length">
-      <span class="todo-count">
-        <strong>{{ remaining }}</strong>
-        <span>{{ remaining === 1 ? ' item' : ' items' }} left</span>
-      </span>
-      <ul class="filters">
-        <li>
-          <a href="#/all" :class="{ selected: visibility === 'all' }">All</a>
-        </li>
-        <li>
-          <a href="#/active" :class="{ selected: visibility === 'active' }">Active</a>
-        </li>
-        <li>
-          <a href="#/completed" :class="{ selected: visibility === 'completed' }">Completed</a>
-        </li>
-      </ul>
-      <button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
-        Clear completed
-      </button>
-    </footer>
-  </section>
-</template>
-
 <style>
-@import "https://unpkg.com/todomvc-app-css@2.4.1/index.css";
+form {
+  max-width: 420px;
+  margin: 30px auto;
+  background: white;
+  text-align: left;
+  padding: 40px;
+  border-radius: 10px;
+}
+h1{
+  color: #333;
+  text-align: center;
+}
+label {
+  color: #aaa;
+  display: inline-block;
+  margin: 25px 0 15px;
+  font-size: 0.6em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+input {
+  display: block;
+  padding: 10px 6px;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  color: #555;
+
+}
+.items{
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  
+  font-weight: bold;
+  border-style: solid;
+  border-radius: 10px;
+  padding: 10px;
+  color: black !important;
+}
+.remove-item{
+  cursor: pointer;
+  font-size: 24px;
+  color: red;
+  margin-left: 14px;
+  &:hover{
+    color: black;
+  }  
+}
+.buttonContainer{
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+button{
+    margin: 20px;
+    padding: 10px 30px;
+    background-color: lightgrey;
+    cursor: pointer;
+}
+.pill{
+  display: inline-block;
+  margin: 20px 10px 0 0;
+  padding: 6px 12px;
+  background: #eee;
+  border-radius: 20px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  font-weight: bold;
+  color: #777;
+  cursor: pointer;
+}
 </style>
