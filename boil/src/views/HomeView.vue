@@ -16,8 +16,8 @@
     </button>   
   </div> 
     <div v-for="(task, index,) in tasks" :key="task.id" class="items">
-      <div>Czynność: {{ task.taskName }}<br> Czas trwania: {{ task.duration }}<br>
-      Czynności poprzedzające: {{ task.dependencie }}</div>
+      <div>Czynność: {{ task.name }}<br> Czas trwania: {{ task.duration }}<br>
+      Czynności poprzedzające: {{ task.dependencies }}</div>
       <div class="remove-item" @click="removeTask(index)">
         &times;
       </div>
@@ -25,10 +25,11 @@
   </form>  
   </template>
 <script>
+import Task from '../components/Task.js';
   export default {
     data() {
       return {
-        idFortask: 0,
+        //idFortask: 0,
         newTask:'',
         tempDependecie: '',
         tasks: [],
@@ -63,23 +64,27 @@
       
       this.addtasks();
     },
-      addtasks() {   
-        this.tasks.push({
-          id: this.idFortask,
-          taskName: this.newTask,
-          duration: parseInt(this.newduration),
-          dependencie: this.newdependencies
-        }) 
+      addtasks() {
+        const myTask = new Task(this.newTask, parseInt(this.newduration), this.newdependencies);
+        // this.tasks.push({
+        //   id: this.idFortask,
+        //   taskName: this.newTask,
+        //   duration: parseInt(this.newduration),
+        //   dependencie: this.newdependencies
+        // }) 
+        this.tasks.push(myTask);
+        console.log(this.tasks);
 
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
 
         this.newTask = '';
-        this.idFortask++;
-        this.newduration = '' ;
+        //this.idFortask++;
+        this.newduration = '';
         this.newdependencies = [];
       },
       removeTask(index){
         this.tasks.splice(index, 1);
+        console.log(this.tasks);
 
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
       }
