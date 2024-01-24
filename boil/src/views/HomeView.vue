@@ -1,31 +1,42 @@
 <template>
-  <form>
   <h1>CPM</h1>
-    <label>Czynność:</label>
-    <input type="text" v-model="newTask"  required @keydown.enter.prevent/>    
-    <label>Czas trwania:</label>
-    <input type="text" v-model="newduration" required @keydown.enter.prevent/> 
-    <label>Czynność poprzedzająca (oddzielaj przecinkiem):</label>
-    <input type="text" v-model="tempDependecie" @keyup="addDependecie" @keydown.enter.prevent/>
-    <div v-for="newdependencie in newdependencies" :key="newdependencie" class="pill">
-    {{ newdependencie }}
-    </div>
+  <form>
+    <div id="addTask-container">
+      <label>Czynność:</label>
+      <input type="text" v-model="newTask"  required @keydown.enter.prevent/>    
+      <label>Czas trwania:</label>
+      <input type="text" v-model="newDuration" required @keydown.enter.prevent/> 
+      <label>Czynność poprzedzająca (oddzielaj przecinkiem):</label>
+      <input type="text" v-model="tempDependecie" @keyup="addDependecie" @keydown.enter.prevent/>
+      <div v-for="newdependencie in newDependencies" :key="newdependencie" class="pill">
+        {{ newdependencie }}
+      </div>
       <div class="buttonContainer">
-    <button type="submit" v-on:click.prevent="submitForm()" @keydown.enter.prevent>
-      Submit task
-    </button>   
-  </div> 
-    <div v-for="(task, index,) in tasks" :key="task.id" class="items">
-      <div>Czynność: {{ task.name }}<br> Czas trwania: {{ task.duration }}<br>
-      Czynności poprzedzające: {{ task.dependencies }}</div>
-      <div class="remove-item" @click="removeTask(index)">
-        &times;
+        <button type="submit" v-on:click.prevent="submitForm()" @keydown.enter.prevent>
+          Add task
+        </button>   
       </div>
     </div>
-  </form>  
+    <div id="items-container">
+      <div v-for="(task, index,) in tasks" :key="task.id" class="items">
+        <div>
+          Czynność: {{ task.name }}<br> Czas trwania: {{ task.duration }}<br>
+          Czynności poprzedzające: {{ task.dependencies }}
+        </div>
+        <div class="remove-item" @click="removeTask(index)">
+         &times;
+        </div>
+      </div>
+    </div>
+  </form>
+  <div id="graph-container">
+    <button type="submit" v-on:click.prevent="generateGraph()" @keydown.enter.prevent>
+          Generate graph
+        </button>   
+  </div>
   </template>
 <script>
-import Task from '../components/Task.js';
+import { Task, findCPM } from '../components/CpmMethod';
   export default {
     data() {
       return {
@@ -33,8 +44,8 @@ import Task from '../components/Task.js';
         newTask:'',
         tempDependecie: '',
         tasks: [],
-        newduration: '',
-        newdependencies: []        
+        newDuration: '',
+        newDependencies: []        
       }
     },
     mounted() {    
@@ -48,15 +59,15 @@ import Task from '../components/Task.js';
         if(e.key === ',' && this.tempDependecie){
           e.preventDefault();
           const cleanedDependecie = this.tempDependecie.replace(/^,+|,+$/g, '').toUpperCase();
-          if (!this.newdependencies.includes(cleanedDependecie)){
-            this.newdependencies.push(cleanedDependecie)
+          if (!this.newDependencies.includes(cleanedDependecie)){
+            this.newDependencies.push(cleanedDependecie)
           }          
           this.tempDependecie = ''
         }
       },
       submitForm() {
       // Perform form validation if needed
-      if (this.newTask.trim() === '' || this.newduration.trim() === '') {
+      if (this.newTask.trim() === '' || this.newDuration.trim() === '') {
         // Handle validation error (show a message, prevent submission, etc.)
         console.log('Validation error: Please fill in all required fields.');
         return;
@@ -65,12 +76,12 @@ import Task from '../components/Task.js';
       this.addtasks();
     },
       addtasks() {
-        const myTask = new Task(this.newTask, parseInt(this.newduration), this.newdependencies);
+        const myTask = new Task(this.newTask, parseInt(this.newDuration), this.newDependencies);
         // this.tasks.push({
         //   id: this.idFortask,
         //   taskName: this.newTask,
-        //   duration: parseInt(this.newduration),
-        //   dependencie: this.newdependencies
+        //   duration: parseInt(this.newDuration),
+        //   dependencie: this.newDependencies
         // }) 
         this.tasks.push(myTask);
         console.log(this.tasks);
@@ -79,31 +90,49 @@ import Task from '../components/Task.js';
 
         this.newTask = '';
         //this.idFortask++;
-        this.newduration = '';
-        this.newdependencies = [];
+        this.newDuration = '';
+        this.newDependencies = [];
       },
       removeTask(index){
         this.tasks.splice(index, 1);
         console.log(this.tasks);
 
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
+      },
+      generateGraph() {
+        if(this.tasks.length < 2) console.log("Add tasks before generating graph")
+        else
+        {
+          let cpmFiltredTasks = findCPM(this.tasks);
+        }
       }
     }    
   }
 </script>
 
 <style>
+#app{
+  display: flex;
+  flex-direction: column;
+}
+h1{
+  font-size: 45px;
+  background-color: whitesmoke;
+  text-align: center;
+  color: #555;
+  border-radius: 5px;
+}
 form {
-  max-width: 420px;
+  display: flex;
+  flex-direction: row;
   margin: 30px auto;
   background: white;
   text-align: left;
   padding: 40px;
   border-radius: 10px;
 }
-h1{
-  color: #333;
-  text-align: center;
+#addTask-container{
+  min-width: 300px;
 }
 label {
   color: #aaa;
@@ -125,9 +154,17 @@ input {
   color: #555;
 
 }
-.items{
-  margin-bottom: 12px;
+#items-container{
+  margin-left: 30px;
   display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.items{
+  margin: 5px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;  
   font-weight: bold;
@@ -167,5 +204,14 @@ button{
   font-weight: bold;
   color: #777;
   cursor: pointer;
+}
+#graph-container{
+  display: flex;
+  flex-direction: row;
+  margin: 30px auto;
+  background: white;
+  text-align: left;
+  padding: 40px;
+  border-radius: 10px;
 }
 </style>
