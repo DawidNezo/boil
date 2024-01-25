@@ -20,8 +20,8 @@
     <div id="items-container">
       <div v-for="(task, index,) in tasks" :key="task.id" class="items">
         <div>
-          Czynność: {{ task.name }}<br> Czas trwania: {{ task.duration }}<br>
-          Czynności poprzedzające: {{ task.dependencies }}
+          Czynność: {{ task.taskName }}<br> Czas trwania: {{ task.duration }}<br>
+          Czynności poprzedzające: {{ task.dependencie }}
         </div>
         <div class="remove-item" @click="removeTask(index)">
          &times;
@@ -36,7 +36,8 @@
   </div>
   </template>
 <script>
-import { Task, findCPM } from '../components/CpmMethod';
+//import { Task, findCPM } from '../components/CpmMethod';
+import {Activity, ActivityList} from '../components/CpmMethod'
   export default {
     data() {
       return {
@@ -45,7 +46,7 @@ import { Task, findCPM } from '../components/CpmMethod';
         tempDependecie: '',
         tasks: [],
         newDuration: '',
-        newDependencies: []        
+        newDependencies: []    
       }
     },
     mounted() {    
@@ -76,15 +77,18 @@ import { Task, findCPM } from '../components/CpmMethod';
       this.addtasks();
     },
       addtasks() {
-        const myTask = new Task(this.newTask, parseInt(this.newDuration), this.newDependencies);
-        // this.tasks.push({
-        //   id: this.idFortask,
-        //   taskName: this.newTask,
-        //   duration: parseInt(this.newDuration),
-        //   dependencie: this.newDependencies
-        // }) 
-        this.tasks.push(myTask);
-        console.log(this.tasks);
+        //const myTask = new Task(this.newTask, parseInt(this.newDuration), this.newDependencies);
+        this.tasks.push({
+          //id: this.idFortask,
+          taskName: this.newTask,
+          duration: parseInt(this.newDuration),
+          dependencie: this.newDependencies
+        }) 
+        //this.tasks.push(myTask);
+        // tasks.addActivity(new Activity(
+        //   {id: this.newTask, duration: parseInt(this.newDuration), predecessors: this.newDependencies}
+        // ))
+        //console.log(this.table);
 
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
 
@@ -94,16 +98,30 @@ import { Task, findCPM } from '../components/CpmMethod';
         this.newDependencies = [];
       },
       removeTask(index){
-        this.tasks.splice(index, 1);
+        this.tasks.splice(index,1);
+        //table.removeTask(index);
         console.log(this.tasks);
 
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
       },
       generateGraph() {
+        // if(this.tasks.length < 2) console.log("Add tasks before generating graph")
+        // else
+        // {
+        //   let CpmPath = tasks.getCriticalPath(tasks[tasks.length - 1]);
+        //   console.log(CpmPath);
+        // }
         if(this.tasks.length < 2) console.log("Add tasks before generating graph")
         else
         {
-          let cpmFiltredTasks = findCPM(this.tasks);
+          let table = new ActivityList();
+          for (const task of this.tasks) {
+            table.addActivity(new Activity(
+              {id: task.taskName, duration: task.duration, predecessors: task.dependencie}
+            ))
+          }
+          let CpmPath = table.getCriticalPath();
+          console.log(CpmPath);
         }
       }
     }    
