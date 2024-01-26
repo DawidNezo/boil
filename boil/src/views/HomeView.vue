@@ -31,8 +31,9 @@
   </form>
   <div id="graph-container">
     <button type="submit" v-on:click.prevent="generateGraph()" @keydown.enter.prevent>
-          Generate graph
-        </button>   
+      Generate graph
+    </button>
+    <span id="cpmResult">CpmResult:{{cpmString}} CpmTime:{{cpmTime}}</span>
   </div>
   </template>
 <script>
@@ -46,7 +47,9 @@ import {Activity, ActivityList} from '../components/CpmMethod'
         tempDependecie: '',
         tasks: [],
         newDuration: '',
-        newDependencies: []    
+        newDependencies: [],
+        cpmString: '',
+        cpmTime: '',
       }
     },
     mounted() {    
@@ -120,8 +123,17 @@ import {Activity, ActivityList} from '../components/CpmMethod'
               {id: task.taskName, duration: task.duration, predecessors: task.dependencie}
             ))
           }
+          console.log(table.getList());
           let CpmPath = table.getCriticalPath();
           console.log(CpmPath);
+          this.cpmTime = CpmPath.let;
+          let pom = "";
+          while(CpmPath){
+            pom += CpmPath.id;
+            CpmPath = CpmPath.predecessors[0];
+          }
+          this.cpmString = pom.split("").reverse().join("->");
+          console.log(pom);
         }
       }
     }    
@@ -225,11 +237,15 @@ button{
 }
 #graph-container{
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-items: center;
   margin: 30px auto;
   background: white;
   text-align: left;
   padding: 40px;
   border-radius: 10px;
+}
+#cpmResult{
+  color: black;
 }
 </style>

@@ -115,7 +115,6 @@ function ActivityList() {
         }
     }
 
-
     /**
      * Private function set Latest Times
      * Latest Start Time (est) and Latest End Time (eet)
@@ -139,7 +138,6 @@ function ActivityList() {
 	        root.h = root.let - root.eet;
         }
     }
-
 
     /**
      * Build Critical Path Tree recursively
@@ -200,6 +198,13 @@ function ActivityList() {
         end.h  	= end.eet - end.let;
         setLateTimes(start);
 
+        //Get real end
+        for(var i in list)
+        {
+            let current = list[i];
+            if (current.let > end.let) end = current;
+        }
+
         //Assemble Critical Path (tree)
 		var path = null;
 		if(end.h == 0){
@@ -212,7 +217,6 @@ function ActivityList() {
  				let : end.let,
 				h	: end.h
 			});
-
 			buildCriticalPath(end, path);
 		}
         return path;
