@@ -35,11 +35,20 @@
     </button>
     <span id="cpmResult">CpmResult:{{cpmString}} CpmTime:{{cpmTime}}</span>
   </div>
+  <div>
+    <Graph :foo=elements ></Graph>
+  </div>
   </template>
 <script>
 //import { Task, findCPM } from '../components/CpmMethod';
 import {Activity, ActivityList} from '../components/CpmMethod'
+import { defineComponent } from 'vue';
+import Graph from '../components/Graph.vue';
+
   export default {
+    components: {
+      Graph
+    },
     data() {
       return {
         //idFortask: 0,
@@ -50,14 +59,15 @@ import {Activity, ActivityList} from '../components/CpmMethod'
         newDependencies: [],
         cpmString: '',
         cpmTime: '',
+        elements: [],
       }
     },
-    mounted() {    
-    const storedTasks = localStorage.getItem('tasks');
-    if (storedTasks) {
-      this.tasks = JSON.parse(storedTasks);
-    }
-  },
+    mounted() {   
+      const storedTasks = localStorage.getItem('tasks');
+      if (storedTasks) {
+        this.tasks = JSON.parse(storedTasks);
+      }
+    },
     methods: {
       addDependecie(e){
         if(e.key === ',' && this.tempDependecie){
@@ -123,23 +133,20 @@ import {Activity, ActivityList} from '../components/CpmMethod'
               {id: task.taskName, duration: task.duration, predecessors: task.dependencie}
             ))
           }
-          console.log(table.getList());
           let CpmPath = table.getCriticalPath();
-          console.log(CpmPath);
           this.cpmTime = CpmPath.let;
           let pom = "";
           while(CpmPath){
             pom += CpmPath.id;
             CpmPath = CpmPath.predecessors[0];
           }
+          this.elements = table.getList();
           this.cpmString = pom.split("").reverse().join("->");
-          console.log(pom);
         }
       }
     }    
   }
 </script>
-
 <style>
 #app{
   display: flex;
