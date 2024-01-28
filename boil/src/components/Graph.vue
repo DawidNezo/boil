@@ -27,6 +27,8 @@ const elements = ref([]);
 
 watch(props, (newVal, oldVal) => {
   elements.value = [];
+  let position = 1;
+
   Object
       .entries(newVal.foo)
       .map(([key, value]) => ({ key, value }))
@@ -36,7 +38,7 @@ watch(props, (newVal, oldVal) => {
           label:
             'Earliest End Time: ' + value.eet + 
             '<br>Latest End Time: ' + value.let,
-          position: { x: Math.floor(Math.random() * 501), y: Math.floor(Math.random() * 501) },
+          position: { x: Math.floor(position), y: Math.floor(position) },
         });
         
         value.predecessors.forEach((predecessor) => {
@@ -46,7 +48,7 @@ watch(props, (newVal, oldVal) => {
               label:
                 'Earliest Start Time: ' + value.est + 
                 '<br>Latest Start Time: ' + value.lst,
-              position: { x: Math.floor(Math.random() * 501), y: Math.floor(Math.random() * 501) },
+              position: { x: Math.floor(position), y: Math.floor(position) },
             });
           }
 
@@ -57,6 +59,8 @@ watch(props, (newVal, oldVal) => {
             label: value.id + ' ' + value.duration,
           });
         });
+
+        position += 50;
       });  
     });
 </script>
