@@ -31,7 +31,7 @@
   </form>
   <div id="graph-container">
     <button type="submit" v-on:click.prevent="generateGraph()" @keydown.enter.prevent>
-      Generate graph
+      Wygeneruj graf
     </button>
     <span id="cpmResult">CpmResult:{{cpmString}} CpmTime:{{cpmTime}}</span>
   </div>

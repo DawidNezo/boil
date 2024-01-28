@@ -23,7 +23,7 @@ import { defineComponent } from 'vue';
 
 const props = defineProps(['foo']);
 
-const elements = ref([])
+const elements = ref([]);
 
 watch(props, (newVal, oldVal) => {
   elements.value = [];
@@ -31,17 +31,30 @@ watch(props, (newVal, oldVal) => {
       .entries(newVal.foo)
       .map(([key, value]) => ({ key, value }))
       .forEach(({ key, value }) => {
-        console.log(value);
         elements.value.push({
           id: value.id,
-          label: value.id + ' duration: ' + value.duration,
-          position: { x: Math.floor(Math.random() * 201), y: Math.floor(Math.random() * 201) },
+          label:
+            'Earliest End Time: ' + value.eet + 
+            '<br>Latest End Time: ' + value.let,
+          position: { x: Math.floor(Math.random() * 501), y: Math.floor(Math.random() * 501) },
         });
+        
         value.predecessors.forEach((predecessor) => {
+          if (predecessor.id == 'start') {
+            elements.value.push({
+              id: predecessor.id,
+              label:
+                'Earliest Start Time: ' + value.est + 
+                '<br>Latest Start Time: ' + value.lst,
+              position: { x: Math.floor(Math.random() * 501), y: Math.floor(Math.random() * 501) },
+            });
+          }
+
           elements.value.push({
-            id: `e${predecessor}-${value.id}`,
+            id: `e${predecessor.id}-${value.id}`,
             target: value.id,
             source: predecessor.id,
+            label: value.id + ' ' + value.duration,
           });
         });
       });  
